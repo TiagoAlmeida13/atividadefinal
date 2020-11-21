@@ -1,11 +1,13 @@
+const fs = require('fs');
+const config = JSON.parse(fs.readFileSync('../config.json', 'utf8'));
+
 const express = require('express')
 const bodyParser = require('body-parser')
 const app = express()
 
-
 const ObjectId = require('mongodb').ObjectID
 const MongoClient = require('mongodb').MongoClient
-const uri = "mongodb+srv://tiago:segredo13@cluster0.5kmhr.mongodb.net/lifeplusDb?retryWrites=true&w=majority";
+const uri = config.database_uri;
 
 app.use(bodyParser.urlencoded({ extended: true }))
 
