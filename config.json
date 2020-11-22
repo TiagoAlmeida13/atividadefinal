@@ -1,0 +1,3 @@
+{
+    "database_uri": "mongodb+srv://tiago:segredo13@cluster0.5kmhr.mongodb.net/lifeplusDb?retryWrites=true&w=majority"
+}
