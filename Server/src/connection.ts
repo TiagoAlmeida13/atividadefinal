@@ -1,15 +1,24 @@
-import fs from 'fs';
-import MongoClient from 'mongodb';
+import * as fs from 'fs';
+import * as path from 'path';
+import * as MongoClient from 'mongodb';
 
-const config = JSON.parse(fs.readFileSync('../config.json', 'utf8'));
+const configPath = path.resolve(__dirname, '../../config.json');
+console.log('Config at', configPath);
+const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
 const uri = config.database_uri;
 
-const dbCollection = new Promise<MongoClient.Collection>((resolve, reject) => {
-  MongoClient.connect(uri, { useUnifiedTopology: true }, (err, client) => {
-      if (err) reject(err); 
-      const db = client.db('lifeplusDb');
-      resolve(db.collection('data'));
-  });
-});
+let _instance: MongoClient.Collection;
 
-module.exports = (async () => await dbCollection)();
+async function getCollection() {
+  if (!_instance) {
+    try {
+      const client = await MongoClient.connect(uri, { useUnifiedTopology: true });
+      _instance = client.db('lifeplusDb').collection('data');
+    } catch (err) {
+      throw err;
+    }
+  }
+  return _instance;
+}
+
+export default getCollection; 
