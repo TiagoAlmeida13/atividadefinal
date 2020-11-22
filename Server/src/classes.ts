@@ -59,7 +59,11 @@ export class Request {
     let parsedQuery = <Record<string, string>>{};
 
     if (query) {
-      const queryAsNestedArray = query.split(' ').map(part => part.split('='));
+      const spacesNotInsideQuotes = /\s(?=(?:[^'"`]*(['"`])[^'"`]*\1)*[^'"`]*$)/;
+      const queryAsNestedArray = query
+        .split(spacesNotInsideQuotes)
+	.filter(el => typeof el !== 'undefined')
+	.map(part => part.replace(/"/g, '').split('='));
       for (let [k, v] of queryAsNestedArray) {
         if (k === 'uid') {
           parsedQuery._id = v;
