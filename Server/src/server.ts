@@ -1,6 +1,6 @@
-import * as express from 'express';
-import * as bodyParser from 'body-parser';
-import * as cors from 'cors';
+import express from 'express';
+import bodyParser from 'body-parser';
+import cors from 'cors';
 import routes from './routes';
 
 const app = express();
@@ -11,5 +11,5 @@ app.use(express.json());
 app.use(cors());
 
 app.use(routes);
-app.listen(3333);
-console.log('Listening at port 3333');
+app.listen(443);
+console.log('Listening at port 443');

@@ -5,6 +5,10 @@ import { Request as APIRequest, Response as APIResponse } from './classes';
 
 const routes = Router();
 
+routes.get('/ping', (req: Request, res: Response) => {
+  return res.json({message: true});
+})
+
 routes.get('/series', async (req: Request, res: Response) => {
   let responseObj;
   try {
