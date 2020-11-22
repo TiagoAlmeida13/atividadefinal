@@ -1,26 +1,37 @@
 # %%
 from collections.abc import Iterable as AbstractIterable
 import csv
-from dataclasses import dataclass
+from dataclasses import dataclass, asdict, field
 from datetime import date, datetime, time
 from io import StringIO
+from itertools import product
 from typing import Iterable, List, Dict, Union, Iterator, Tuple, Optional
 from bs4 import BeautifulSoup
 import requests
+from .classes import Point
+from . import connection
+
 # %%
 settings = {
     "reference_url": "http://tabnet.datasus.gov.br/cgi/deftohtm.exe?sih/cnv/nibr.def",
     "data_url": "http://tabnet.datasus.gov.br/cgi/tabcgi.exe?sih/cnv/nibr.def",
     "series_prefix": "SUS\\Morbidade Hospitalar"
 }
+
 # %%
 def process():
-    for year, month in zip(range(2008, 2020 + 1), range(1, 12 + 1)):
+    for year, month in product(range(2008, 2020 + 1), range(1, 12 + 1)):
+        print(f'Scraping {year}/{month}')
         dt = date(year, month, 1)
         page = Page([dt])
+        if not page.csv:
+            print('No data found in page')
+            continue
         for row in make_csv_reader(page.csv):
             for series in CSVRowAdapter(row, datetime.combine(dt, time(0))):
-                print(series)
+                connection.add_point(series.uid, series.point)
+                connection.add_fields(series.uid, asdict(series.fields))
+        print('Saved series')
     return True
 
 
@@ -90,6 +101,7 @@ class Page:
         self.encoded_data = self.encode_data(decoded_data)
         response = requests.post(settings['data_url'], headers=self.headers, data=self.encoded_data, timeout=120)
         response.raise_for_status()
+        print('Got response')
         self.response = response
 
     def encode_data(self, data: Dict[str, Union[str, List[str]]]) -> Dict[bytes, Union[bytes, List[bytes]]]:
@@ -110,22 +122,19 @@ class Page:
         return [f'nibr{dt}.dbf' for dt in as_year_and_month]
 
     @property
-    def csv(self) -> str:
-        soup = BeautifulSoup(self.response.text)
+    def csv(self) -> Optional[str]:
+        soup = BeautifulSoup(self.response.text, features='lxml')
         csv_tag = soup.find('pre')
-        assert csv_tag.string[:2] == '\r\n'
-        return csv_tag.string[2:]
+        if csv_tag:
+            assert csv_tag.string[:2] == '\r\n'
+            return csv_tag.string[2:]
+        else:
+            return None
 
 
 def make_csv_reader(csv_str: str) -> csv.DictReader:
     stream = StringIO(csv_str)
     return csv.DictReader(stream, delimiter=';')
-
-
-@dataclass
-class Point:
-    datetime: datetime
-    value: float
 
 
 @dataclass
@@ -137,6 +146,10 @@ class Fields:
     sexo: str = 'Feminino'
     source: str = 'SUS'
     variable: str = 'Morbidade Hospitalar'
+    description: str = field(init=False)
+
+    def __post_init__(self):
+        self.description = f'SUS - Morbidade, Epilepsia, Feminino, {self.faixa_etária}, {self.município_nom}'
 
 
 @dataclass
