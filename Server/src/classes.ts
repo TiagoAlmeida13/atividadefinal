@@ -88,26 +88,28 @@ export class Request {
 
 export class RequestLen {
 
-  requestLen: number
+  requestLen: number;
+  mongoLen: number | null
 
   constructor(len: number) {
     if (len < -1) {
       throw 'len must be -1 or higher';
     }
     this.requestLen = len;
+    this.mongoLen = RequestLen.parseToMongo(len);
   }
 
-  toMongo() {
-    if (this.requestLen === -1) {
+  static parseToMongo(requestLen: number) {
+    if (requestLen === -1) {
       return 0; // For Mongo, a limit of 0 == no limit.
-    } else if (this.requestLen === 0) {
+    } else if (requestLen === 0) {
       return null; // Mongo has no thing as 'I want to query, but get no documents'
     } else { // > 0
-      return this.requestLen;
+      return requestLen;
     }
   }
 
   toString() {
-    return `RequestLen(${this.requestLen})`;
+    return `RequestLen {requestLen: ${this.requestLen}, mongoLen: ${this.mongoLen}}`;
   }
 }

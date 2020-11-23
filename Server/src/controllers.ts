@@ -14,7 +14,7 @@ export class MongoDBController {
   async runQuery(request: Request) {
     let series, num, distinct;
     const queryExists = objectHasAnyProperty(request.query);
-    const mongoLen = request.len.toMongo();
+    const mongoLen = request.len.mongoLen;
     if (mongoLen === null) { // User wants only a count
       ({ num } = await this.getSeries(request.query, 0));
     } else if (queryExists && mongoLen >= 0) { // User wants results + count.
