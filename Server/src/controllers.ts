@@ -13,13 +13,16 @@ export class MongoDBController {
 
   async runQuery(request: Request) {
     let series, num, distinct;
-    const queryExists = objectHasAnyProperty(request.query);
     const mongoLen = request.len.mongoLen;
-    if (mongoLen === null) { // User wants only a count
+    // Getting series and num
+    if (mongoLen === null && !objectHasAnyProperty(request.query)) { // I want no series and there is no query
+      num = await this.countCollection();
+    } else if (mongoLen === null) { // I want no series, but I sent a query
       ({ num } = await this.getSeries(request.query, 0));
-    } else if (queryExists && mongoLen >= 0) { // User wants results + count.
+    } else {
       ({ series, num } = await this.getSeries(request.query, mongoLen));
     }
+    // Geting distinct fields
     if (request.distinct && request.distinct.length > 0) {
       distinct = await this.getManyDistinct(request.distinct, request.query);
     }
@@ -42,7 +45,7 @@ export class MongoDBController {
     return fields.reduce(async (acc, field) => {
       const distincts = field === 'fields'
         ? await this.getSetFields(query)
-	: await this.getOneDistinct(field, query);
+	      : await this.getOneDistinct(field, query);
       acc.then(obj => obj[field] = distincts);
       return acc;
     }, Promise.resolve(<Record<string, string[]>>{}))

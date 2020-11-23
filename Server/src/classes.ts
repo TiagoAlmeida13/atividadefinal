@@ -11,12 +11,8 @@ export class Response {
 
   constructor(success: Boolean, content?: Array<any>, len?: number, distinct?: Record<string, string[]>, error?: string) {
     this.success = success;
-    // If there's content, there must be a len
-    if (content) {
-      assert.notStrictEqual(len, undefined);
-      this.content = content;
-      this.len = len;
-    }
+    this.content = content;
+    this.len = len;
     if (distinct) this.distinct = Response.parseDistinct(distinct);
     if (error) this.error = error;
   }
