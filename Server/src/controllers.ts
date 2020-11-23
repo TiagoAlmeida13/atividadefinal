@@ -45,7 +45,7 @@ export class MongoDBController {
 
   async getSetFields(query: Record<string, string>): Promise<string[]> { // Improve this by getting result from MongoDB
     console.log('Getting set fields');
-    const all = await this.collection.distinct('fields');
+    const all = await this.collection.distinct('fields', query);
     const allKeys = all.reduce((acc, doc) => {
       Object.keys(doc).forEach(key => acc.add(key));
       return acc;
