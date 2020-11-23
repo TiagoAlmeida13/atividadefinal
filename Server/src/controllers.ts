@@ -1,5 +1,7 @@
+import { query } from 'express';
 import { Collection } from 'mongodb';
 import { Request, Response } from './classes';
+import { objectHasAnyProperty} from './utils';
 
 export class MongoDBController {
 
@@ -11,13 +13,21 @@ export class MongoDBController {
 
   async runQuery(request: Request) {
     let series, num, distinct;
-    if (request.query && request.len > 0) { // For Mongo, a .limit() of 0 is the same as no limit.
-      ({ series, num } = await this.getSeries(request.query, request.len));
+    const queryExists = objectHasAnyProperty(request.query);
+    const mongoLen = request.len.toMongo();
+    if (mongoLen === null) { // User wants only a count
+      ({ num } = await this.getSeries(request.query, 0));
+    } else if (queryExists && mongoLen >= 0) { // User wants results + count.
+      ({ series, num } = await this.getSeries(request.query, mongoLen));
     }
-    if (request.distinct) {
+    if (request.distinct && request.distinct.length > 0) {
       distinct = await this.getManyDistinct(request.distinct, request.query);
     }
     return new Response(true, series, num, distinct);
+  }
+
+  async countCollection() {
+    return await this.collection.countDocuments();
   }
 
   async getSeries(query: Record<string, string>, limit: number) {

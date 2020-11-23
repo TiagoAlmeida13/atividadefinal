@@ -38,12 +38,12 @@ export class Response {
 export class Request {
 
   query: Record<string, string>;
-  len: number;
+  len: RequestLen;
   distinct?: Array<string>;
 
   constructor(query: string, len: number, distinct?: Array<string>) {
     this.query = Request.parseQueryString(query);
-    this.len = len;
+    this.len = new RequestLen(len);
     if (typeof distinct !== 'undefined' && !Array.isArray(distinct)) {
       throw 'If provided, distinct must be an array of strings';
     }
@@ -84,4 +84,30 @@ export class Request {
     return parsedQuery;
   }
 
+}
+
+export class RequestLen {
+
+  requestLen: number
+
+  constructor(len: number) {
+    if (len < -1) {
+      throw 'len must be -1 or higher';
+    }
+    this.requestLen = len;
+  }
+
+  toMongo() {
+    if (this.requestLen === -1) {
+      return 0; // For Mongo, a limit of 0 == no limit.
+    } else if (this.requestLen === 0) {
+      return null; // Mongo has no thing as 'I want to query, but get no documents'
+    } else { // > 0
+      return this.requestLen;
+    }
+  }
+
+  toString() {
+    return `RequestLen(${this.requestLen})`;
+  }
 }
