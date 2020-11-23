@@ -51,8 +51,16 @@ export class Request {
   }
 
   static fromExpressRequest(expressRequest: ExpressRequest) {
-    const reqBody = expressRequest.body;
-    return new Request(reqBody.query, reqBody.len, reqBody.distinct);
+    let { query, len, distinct } = expressRequest.query;
+    if (typeof query === 'object' || typeof len === 'object') {
+      throw 'Accepts only a single query';
+    }
+    if (typeof distinct === 'string') {
+      distinct = [distinct];
+    } else if (!(typeof distinct === 'undefined')) {
+      throw 'Distinct must be string or array of string';
+    }
+    return new Request(query || '', Number(len), distinct);
   }
 
   static parseQueryString(query: string) {
