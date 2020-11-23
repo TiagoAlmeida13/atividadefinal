@@ -30,13 +30,12 @@ export class MongoDBController {
 
   getManyDistinct(fields: string[], query: Record<string, string>) {
     return fields.reduce(async (acc, field) => {
-      if (field === 'fields') {
-        acc[field] = await this.getSetFields(query);
-      } else {
-        acc[field] = await this.getOneDistinct(field, query);
-      }
+      const distincts = field === 'fields'
+        ? await this.getSetFields(query)
+	: await this.getOneDistinct(field, query);
+      acc.then(obj => obj[field] = distincts);
       return acc;
-    }, <Promise<Record<string, string[]>>>{})
+    }, Promise.resolve(<Record<string, string[]>>{}))
   }
 
   async getOneDistinct(field: string, query: Record<string, string>): Promise<string[]> {
@@ -44,7 +43,7 @@ export class MongoDBController {
     return await this.collection.distinct(field, query);
   }
 
-  async getSetFields(query: Record<string, string>) { // Improve this by getting result from MongoDB
+  async getSetFields(query: Record<string, string>): Promise<string[]> { // Improve this by getting result from MongoDB
     console.log('Getting set fields');
     const all = await this.collection.distinct('fields');
     const allKeys = all.reduce((acc, doc) => {
