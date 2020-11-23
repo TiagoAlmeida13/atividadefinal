@@ -1,5 +1,11 @@
 /** Adds to the global object a "lp" namespace with:
  * - function getSeries(query: str, len: number, distinct: string[])
+ *     - To get number of all series: getSeries('', -1)
+ *     - To get all existing field keys: getSeries('', 0, ['fields'])
+ *     - To get all values for a particular field: getSeries('', 0, ['aParticularField'])
+ *     - You can do the two above at once: getSeries('', 0, ['fields', 'aParticularField'])
+ *     - To get all series corresponding to a query: getSeries('aParticularField=value anotherField=value', -1)
+ *     - To get a unique series given its uid: getSeries('uid=aUid', -1)
  */
 (function () {
   
